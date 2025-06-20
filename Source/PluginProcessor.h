@@ -74,20 +74,16 @@ private:
     DSP_Order dspOrder;
 
     template<typename DSP>
-    struct DSP_Choice: juce::dsp::ProcessorBase
-    {
-        void prepare(const juce::dsp::ProcessSpec& spec) override
-        {
+    struct DSP_Choice: juce::dsp::ProcessorBase {
+        void prepare(const juce::dsp::ProcessSpec& spec) override {
             dsp.prepare(spec);
         }
 
-        void process(const juce::dsp::ProcessContextReplacing<float>& context) override
-        {
+        void process(const juce::dsp::ProcessContextReplacing<float>& context) override {
             dsp.process(context);
         }
 
-        void reset() override
-        {
+        void reset() override {
             dsp.reset();
         }
 

@@ -34,7 +34,7 @@ JucetutorialsAudioProcessor::JucetutorialsAudioProcessor()
                        )
 #endif
 {
-    auto phaserParams = std::array {
+    auto floatParams = std::array {
         &phaserRateHz,
         &phaserCenterFreqHz,
         &phaserDepthPercent,
@@ -42,7 +42,7 @@ JucetutorialsAudioProcessor::JucetutorialsAudioProcessor()
         &phaserMixPercent
     };
 
-    auto phaserFuncs = std::array {
+    auto floatNameFuncs = std::array {
         &getPhaserRateName,
         &getPhaserCenterFreqName,
         &getPhaserDepthName,
@@ -50,9 +50,9 @@ JucetutorialsAudioProcessor::JucetutorialsAudioProcessor()
         &getPhaserMixName
     };
 
-    for (size_t i = 0; i < phaserParams.size(); ++i) {
-        auto ptrToParamPtr = phaserParams[i];
-        *ptrToParamPtr = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter(phaserFuncs[i]()));
+    for (size_t i = 0; i < floatParams.size(); ++i) {
+        auto ptrToParamPtr = floatParams[i];
+        *ptrToParamPtr = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter(floatNameFuncs[i]()));
         jassert(*ptrToParamPtr != nullptr);
     }
 }

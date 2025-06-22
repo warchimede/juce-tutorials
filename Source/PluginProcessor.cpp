@@ -21,6 +21,8 @@ auto getChorusCenterDelayName() { return juce::String("Chorus Center Delay Ms");
 auto getChorusFeedbackName() { return juce::String("Chorus Feedback %"); }
 auto getChorusMixName() { return juce::String("Chorus Mix %"); }
 
+auto getOverdriveSaturationName() { return juce::String("Overdrive Saturation"); }
+
 //==============================================================================
 JucetutorialsAudioProcessor::JucetutorialsAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -46,6 +48,8 @@ JucetutorialsAudioProcessor::JucetutorialsAudioProcessor()
         &chorusCenterDelayMs,
         &chorusFeedbackPercent,
         &chorusMixPercent,
+
+        &overdriveSaturation,
     };
 
     auto floatNameFuncs = std::array {
@@ -60,6 +64,8 @@ JucetutorialsAudioProcessor::JucetutorialsAudioProcessor()
         &getChorusCenterDelayName,
         &getChorusFeedbackName,
         &getChorusMixName,
+
+        &getOverdriveSaturationName,
     };
 
     for (size_t i = 0; i < floatParams.size(); ++i) {
@@ -191,93 +197,91 @@ juce::AudioProcessorValueTreeState::ParameterLayout JucetutorialsAudioProcessor:
 
     // Phaser rate: 0.01 - 2.0 Hz, default 0.2 Hz
     auto name = getPhaserRateName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(
-               juce::ParameterID{ name, versionHint },
-               name,
-               juce::NormalisableRange<float>(0.01f, 2.f, 0.01f, 1.f),
-               0.2f,
-               "Hz"));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{ name, versionHint },
+                                                           name,
+                                                           juce::NormalisableRange<float>(0.01f, 2.f, 0.01f, 1.f),
+                                                           0.2f,
+                                                           "Hz"));
 
     // Phaser depth: 0 - 1, default 0.05
     name = getPhaserDepthName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(
-               juce::ParameterID{ name, versionHint },
-               name,
-               juce::NormalisableRange<float>(0.01f, 1.f, 0.01f, 1.f),
-               0.05f,
-               "%"));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{ name, versionHint },
+                                                           name,
+                                                           juce::NormalisableRange<float>(0.01f, 1.f, 0.01f, 1.f),
+                                                           0.05f,
+                                                           "%"));
 
     // Phaser center freq: 20 - 20k Hz, default 1000 Hz
     name = getPhaserCenterFreqName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(
-               juce::ParameterID{ name, versionHint },
-               name,
-               juce::NormalisableRange<float>(20.f, 20000.f, 1.f, 1.f),
-               1000.f,
-               "Hz"));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{ name, versionHint },
+                                                           name,
+                                                           juce::NormalisableRange<float>(20.f, 20000.f, 1.f, 1.f),
+                                                           1000.f,
+                                                           "Hz"));
 
     // Phaser feedback: -1 - +1, default 0
     name = getPhaserFeedbackName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(
-               juce::ParameterID{ name, versionHint },
-               name,
-               juce::NormalisableRange<float>(-1.f, 1.f, 0.01f, 1.f),
-               0.0f,
-               "%"));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{ name, versionHint },
+                                                           name,
+                                                           juce::NormalisableRange<float>(-1.f, 1.f, 0.01f, 1.f),
+                                                           0.0f,
+                                                           "%"));
 
     // Phaser mix: 0 - 1, default 0.05
     name = getPhaserMixName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(
-               juce::ParameterID{ name, versionHint },
-               name,
-               juce::NormalisableRange<float>(0.01f, 1.f, 0.01f, 1.f),
-               0.05f,
-               "%"));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{ name, versionHint },
+                                                           name,
+                                                           juce::NormalisableRange<float>(0.01f, 1.f, 0.01f, 1.f),
+                                                           0.05f,
+                                                           "%"));
 
     // Chorus rate: 0.01 - 100.0 Hz, default 0.2 Hz
     name = getChorusRateName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(
-               juce::ParameterID{ name, versionHint },
-               name,
-               juce::NormalisableRange<float>(0.01f, 100.f, 0.01f, 1.f),
-               0.2f,
-               "Hz"));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{ name, versionHint },
+                                                           name,
+                                                           juce::NormalisableRange<float>(0.01f, 100.f, 0.01f, 1.f),
+                                                           0.2f,
+                                                           "Hz"));
 
     // Chorus depth: 0 - 1, default 0.05
     name = getChorusDepthName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(
-               juce::ParameterID{ name, versionHint },
-               name,
-               juce::NormalisableRange<float>(0.01f, 1.f, 0.01f, 1.f),
-               0.05f,
-               "%"));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{ name, versionHint },
+                                                           name,
+                                                           juce::NormalisableRange<float>(0.01f, 1.f, 0.01f, 1.f),
+                                                           0.05f,
+                                                           "%"));
 
     // Chorus center delay: 1 - 100 Ms, default 1000 Hz
     name = getChorusCenterDelayName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(
-               juce::ParameterID{ name, versionHint },
-               name,
-               juce::NormalisableRange<float>(1.f, 100.f, 0.1f, 1.f),
-               7.f,
-               "%"));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{ name, versionHint },
+                                                           name,
+                                                           juce::NormalisableRange<float>(1.f, 100.f, 0.1f, 1.f),
+                                                           7.f,
+                                                           "%"));
 
     // Chorus feedback: -1 - +1, default 0
     name = getChorusFeedbackName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(
-               juce::ParameterID{ name, versionHint },
-               name,
-               juce::NormalisableRange<float>(-1.f, 1.f, 0.01f, 1.f),
-               0.0f,
-               "%"));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{ name, versionHint },
+                                                           name,
+                                                           juce::NormalisableRange<float>(-1.f, 1.f, 0.01f, 1.f),
+                                                           0.0f,
+                                                           "%"));
 
     // Chorus mix: 0 - 1, default 0.05
     name = getChorusMixName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(
-               juce::ParameterID{ name, versionHint },
-               name,
-               juce::NormalisableRange<float>(0.01f, 1.f, 0.01f, 1.f),
-               0.05f,
-               "%"));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{ name, versionHint },
+                                                           name,
+                                                           juce::NormalisableRange<float>(0.01f, 1.f, 0.01f, 1.f),
+                                                           0.05f,
+                                                           "%"));
+
+    // Overdrive: 1 - 100, uses the drive portion of the ladder filter class for now
+    name = getOverdriveSaturationName();
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{ name, versionHint },
+                                                           name,
+                                                           juce::NormalisableRange<float>(1.f, 100.f, 0.1f, 1.f),
+                                                           1.f,
+                                                           ""));
 
     return layout;
 }

@@ -39,6 +39,20 @@ auto getLadderFilterChoices() {
     };
 }
 
+auto getGeneralFilterChoices() {
+    return juce::StringArray {
+        "Peak",
+        "Bandpass",
+        "Notch",
+        "Allpass",
+    };
+}
+
+auto getGeneralFilterModeName() { return juce::String("General Filter Mode"); }
+auto getGeneralFilterFreqName() { return juce::String("General Filter Freq Hz"); }
+auto getGeneralFilterQualityName() { return juce::String("General Filter Quality"); }
+auto getGeneralFilterGainName() { return juce::String("General Filter Gain"); }
+
 //==============================================================================
 JucetutorialsAudioProcessor::JucetutorialsAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -70,6 +84,10 @@ JucetutorialsAudioProcessor::JucetutorialsAudioProcessor()
         &ladderFilterCutoffHz,
         &ladderFilterResonance,
         &ladderFilterDrive,
+
+        &generalFilterFreqHz,
+        &generalFilterQuality,
+        &generalFilterGain,
     };
 
     auto floatNameFuncs = std::array {
@@ -90,6 +108,10 @@ JucetutorialsAudioProcessor::JucetutorialsAudioProcessor()
         &getLadderFilterCutoffName,
         &getLadderFilterResonanceName,
         &getLadderFilterDriveName,
+
+        &getGeneralFilterFreqName,
+        &getGeneralFilterQualityName,
+        &getGeneralFilterGainName,
     };
 
     for (size_t i = 0; i < floatParams.size(); ++i) {
@@ -98,8 +120,21 @@ JucetutorialsAudioProcessor::JucetutorialsAudioProcessor()
         jassert(*ptrToParamPtr != nullptr);
     }
 
-    ladderFilterMode = dynamic_cast<juce::AudioParameterChoice*>(apvts.getParameter(getLadderFilterModeName()));
-    jassert(ladderFilterMode != nullptr);
+    auto choiceParams = std::array {
+        &ladderFilterMode,
+        &generalFilterMode,
+    };
+
+    auto choiceNameFuncs = std::array {
+        &getLadderFilterModeName,
+        &getGeneralFilterModeName,
+    };
+
+    for (size_t i = 0; i < choiceParams.size(); ++i) {
+        auto ptrToParamPtr = choiceParams[i];
+        *ptrToParamPtr = dynamic_cast<juce::AudioParameterChoice*>(apvts.getParameter(choiceNameFuncs[i]()));
+        jassert(*ptrToParamPtr != nullptr);
+    }
 }
 
 JucetutorialsAudioProcessor::~JucetutorialsAudioProcessor()
@@ -342,6 +377,38 @@ juce::AudioProcessorValueTreeState::ParameterLayout JucetutorialsAudioProcessor:
                                                            1.f,
                                                            ""));
 
+    // General filter mode: peak, bandpass, notch, allpass
+    name = getGeneralFilterModeName();
+    choices = getGeneralFilterChoices();
+    layout.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID{ name, versionHint },
+                                                            name,
+                                                            choices,
+                                                            0));
+
+    // General filter freq: 20 - 20k Hz, 1Hz increments
+    name = getGeneralFilterFreqName();
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{ name, versionHint },
+                                                           name,
+                                                           juce::NormalisableRange<float>(20.f, 20000.f, 1.f, 1.f),
+                                                           750.f,
+                                                           "Hz"));
+
+    // General filter quality: 0.1 - 10, 0.05 increments
+    name = getGeneralFilterQualityName();
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{ name, versionHint },
+                                                           name,
+                                                           juce::NormalisableRange<float>(0.1f, 10.f, 0.05f, 1.f),
+                                                           1.f,
+                                                           ""));
+
+    // General filter gain: -24 - +24 dB, 0.5dB increments
+    name = getGeneralFilterGainName();
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{ name, versionHint },
+                                                           name,
+                                                           juce::NormalisableRange<float>(-24.f, 24.f, 0.5f, 1.f),
+                                                           0.f,
+                                                           "dB"));
+
     return layout;
 }
 
@@ -361,7 +428,7 @@ void JucetutorialsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
         buffer.clear (i, 0, buffer.getNumSamples());
 
     //DONE: add APVTS
-    //TODO: create audio parameters for all dsp choices
+    //Done: create audio parameters for all dsp choices
     //TODO: update DSP here from audio parameters
     //TODO: save/load settings
     //TODO: save/load DSP order
@@ -401,6 +468,9 @@ void JucetutorialsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
             break;
         case DSP_Option::LadderFilter:
             dspPointers[i] = &ladderFilter;
+            break;
+        case DSP_Option::GeneralFilter:
+            dspPointers[i] = &generalFilter;
             break;
         case DSP_Option::END_OF_LIST:
             jassertfalse;
